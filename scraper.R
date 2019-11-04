@@ -1,4 +1,4 @@
-setwd("/Users/quinnx/Documents/GitHub/crimeR")
+setwd("C:/Users/e321843/Documents/GitHub/crimeR")
 library(tidyverse)
 library(lubridate)
 library(jsonlite)
@@ -10,7 +10,7 @@ library(geojsonio)
 library(sf)
 library(maptools)
 library(rgdal)
-
+library(raster)
 
 timeTibble = tibble(timename = c('Last 30 Days',c(2008:2019)),
                     timenum=c(8,32,33,34,35,11,10,9,27,26,38,0,1))
@@ -75,10 +75,105 @@ file2 = outDF_formatted[206407:nrow(outDF_formatted),]
 write_csv(file1,'file1.csv')
 write_csv(file2,'file2.csv')
 
+outDF_formatted = rbind(read_csv('file1.csv'),read_csv('file2.csv'))
 
 df = outDF_formatted %>% filter(offense=="SEX ABUSE") 
 
+dc_crimelimits = c(xmin=min(outDF_formatted$latitude),
+                   xmax=max(outDF_formatted$latitude),
+                   ymin=min(outDF_formatted$longitude),
+                   ymax=max(outDF_formatted$longitude))
+  
+###################################
 
+# get MD boundaries - USA boundaries apckage
+md.state<-us_states(resolution = 'high', states='washington dc')
+
+###################################
+map.dc <- get_map("Washington DC", zoom = 12)
+ggmap(map.dc)+
+  map_theme+
+  geom_point(data = df,
+             mapping = aes(x = longitude, y = latitude),
+             color="black", size=1, alpha = 0.1)+
+  geom_point(data = df,
+             mapping = aes(x = longitude, y = latitude),
+             fill='cyan', size=1)
+
+ldn = readOGR(dsn='DC Census Tracts.shp', 'DC Census Tracts' )
+
+####################################
+usa <- map_data("usa")
+ggplot() + geom_polygon(data = usa, aes(x=long, y = lat, group = group)) + 
+  coord_fixed(1.3)
+
+ggplot() + 
+  geom_polygon(data = usa, aes(x=long, y = lat, group = group), fill = NA, color = "red") + 
+  coord_fixed(1.3)
+
+states <- map_data("state")
+
+dmv <- subset(states, region %in% c("washington dc","maryland","virginia"))
+
+ggplot(data = dmv) + 
+  geom_polygon(aes(x = long, y = lat, fill = region, group = group), color = "white") + 
+  coord_fixed(1.3) +
+  scale_x_continuous(limits = dc_crimelimits['xmin'], dc_crimelimits['xmax'])+
+  scale_y_continuous(limits = dc_crimelimits['ymin'], dc_crimelimits['ymax'])
+
++
+  guides(fill=FALSE)  # do this to leave off the color legend
+
+
+dc_state <- subset(states, region == "washington dc")
+
+
+ca_base <- ggplot(data = dc_state, mapping = aes(x = long, y = lat, group = group)) + 
+  coord_fixed(1.3) + 
+  geom_polygon(color = "black", fill = "gray")
+ca_base + theme_nothing()
+
+#######################################
+dc = get_map(location = 'DC', zoom = 12)
+
+nhbds = read_csv("DC Census Tracts.csv")
+
+ggmap(dc) + 
+  geom_point(aes(x = longitude, y = latitude), 
+               data = df,
+               alpha = 0.8, 
+               color = "black",
+               size = 0.2)
+
+# courtesy R Lovelace
+ggmap_rast <- function(map){
+  map_bbox <- attr(map, 'bb') 
+  .extent <- extent(as.numeric(map_bbox[c(2,4,1,3)]))
+  my_map <- raster(.extent, nrow= nrow(map), ncol = ncol(map))
+  rgb_cols <- setNames(as.data.frame(t(col2rgb(map))), c('red','green','blue'))
+  red <- my_map
+  values(red) <- rgb_cols[['red']]
+  green <- my_map
+  values(green) <- rgb_cols[['green']]
+  blue <- my_map
+  values(blue) <- rgb_cols[['blue']]
+  stack(red,green,blue)
+}
+
+dc <- get_map(location = 'DC', zoom = 12) 
+dc.rast <- ggmap_rast(map = dc) # convert google map to raster object
+nhbds <- readOGR("DC Census Tracts", "DC Census Tracts") # use rgdal to preserve projection
+dc.only <- mask(dc.rast, nhbds) # clip to bounds of census tracts
+
+# prep raster as a data frame for printing with ggplot
+dc.df <- data.frame(rasterToPoints(dc.only))
+ggplot(dc.df) + 
+  geom_point(aes(x=x, y=y, col=rgb(layer.1/255, layer.2/255, layer.3/255))) + 
+  scale_color_identity()
+
+
+
+###################################
 
 dc = get_map(location = 'DC', zoom = 12)
 
@@ -123,5 +218,5 @@ dc_basemap <- ggplot() +
   geom_sf(data = dc_roads_sf, color = street_yellow, alpha = 0.5) +
   geom_sf(data = dc_boundary_sf, fill = NA, color = "#909695") +
   geom_sf(data = dc_water_sf, fill = "#cbdeef", color = "#9bbddd") +
-  map_theme + # the theme I created
+  map_theme + 
   labs(title = "DC Basemap")
