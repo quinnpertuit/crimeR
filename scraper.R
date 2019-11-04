@@ -5,6 +5,12 @@ library(jsonlite)
 library(magrittr)
 library(httr)
 library(maps)
+library(ggmap)
+library(geojsonio)
+library(sf)
+library(maptools)
+library(rgdal)
+
 
 timeTibble = tibble(timename = c('Last 30 Days',c(2008:2019)),
                     timenum=c(8,32,33,34,35,11,10,9,27,26,38,0,1))
@@ -70,17 +76,52 @@ write_csv(file1,'file1.csv')
 write_csv(file2,'file2.csv')
 
 
-
 df = outDF_formatted %>% filter(offense=="SEX ABUSE") 
-  
-base_map = map_data('state')
-
-ggplot(base_map, aes(x = long, y = lat, group = group)) +
-  geom_polygon(fill="lightgray", colour = "white")+
-  geom_point(inherit.aes = FALSE, data = df, aes(x = longitude, y = latitude), fill = "red")+
-  coord_fixed(xlim = c(-77.1,-76.9), ylim = c(38.8, 39.0))
-  coord_sf(, expand = FALSE)
-  
 
 
 
+dc = get_map(location = 'DC', zoom = 12)
+
+dc_boundaries = readOGR("Washington_DC_Boundary.shp")
+
+# dc wards from http://opendata.dc.gov/datasets/ward-from-2012
+dc_wards_sf <- fromJSON("https://opendata.arcgis.com/datasets/0ef47379cbae44e88267c01eaec2ff6e_31.geojson")
+
+# major roads from http://opendata.dc.gov/datasets/major-roads/geoservice
+dc_roads_sf <- fromJSON("https://opendata.arcgis.com/datasets/3031b2c72a4942bb86356e921e73e8c3_38.geojson")
+
+# national parks from http://opendata.dc.gov/datasets/national-parks
+dc_nat_parks_sf <- fromJSON("https://opendata.arcgis.com/datasets/14eb1c6b576940c7b876ebafb227febe_10.geojson")
+
+# dc boundary line from http://opendata.dc.gov/datasets/washington-dc-boundary
+dc_boundary_sf <- Washington_DC_Boundary.shp
+
+map_theme <-
+  theme(
+    panel.grid.major = element_line(colour = "transparent"),
+    axis.line = element_blank(),
+    axis.text = element_blank(),
+    axis.ticks = element_blank(),
+    axis.title = element_blank(),
+    panel.background = element_blank(),
+    panel.border = element_blank(),
+    panel.grid = element_blank(),
+    panel.spacing = unit(0, "lines"),
+    legend.justification = c(0, 0),
+    title  = element_text(family = "Bradley Hand ITC", size = 15),
+    legend.title = element_text(family = "Century Gothic", size = 9),
+    legend.text = element_text(family = "Century Gothic", size = 8),
+    legend.background = element_blank(),
+    legend.position="none", # legend is not really necessary
+    plot.caption = element_text(family = "Century Gothic", size = 8, hjust = 0, color = "gray60"),
+    plot.subtitle = element_text(family = "Century Gothic", size = 8, vjust = -2, color = "gray60"),
+    plot.background = element_rect(color = "#d4dddc")
+  )
+
+dc_basemap <- ggplot() +
+  geom_sf(data = dc_wards_sf, fill = "#d4dddc", color = NA, alpha = 0.2) +
+  geom_sf(data = dc_roads_sf, color = street_yellow, alpha = 0.5) +
+  geom_sf(data = dc_boundary_sf, fill = NA, color = "#909695") +
+  geom_sf(data = dc_water_sf, fill = "#cbdeef", color = "#9bbddd") +
+  map_theme + # the theme I created
+  labs(title = "DC Basemap")
