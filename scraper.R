@@ -1,4 +1,4 @@
-setwd("/Users/quinnx/Documents/GitHub/crimeR")
+setwd("/Users/quinnx/Documents/GitHub/crimeR/crimeR")
 library(tidyverse)
 library(lubridate)
 library(jsonlite)
@@ -10,7 +10,7 @@ library(geojsonio)
 library(sf)
 library(maptools)
 library(rgdal)
-
+library(tigris)
 
 timeTibble = tibble(timename = c('Last 30 Days',c(2008:2019)),
                     timenum=c(8,32,33,34,35,11,10,9,27,26,38,0,1))
@@ -75,10 +75,95 @@ file2 = outDF_formatted[206407:nrow(outDF_formatted),]
 write_csv(file1,'file1.csv')
 write_csv(file2,'file2.csv')
 
+outDF_formatted = rbind(
+  read.csv('file1.csv',stringsAsFactors = F),
+  read.csv('file2.csv',stringsAsFactors = F)
+)
+
+
+sts <- c("DC", "MD", "VA") 
+combined <- rbind_tigris(
+  lapply(sts, function(x) {
+    tracts(x, cb = FALSE) #TRUE)
+  })
+)
+
+plot(combined %>% filter())+
+
+dcroads = roads("DC", 1)
+dctracts = tracts("DC", 1)
+dcblocks = blocks("DC", 1)
+dcplaces = places("DC", 1)
+dccounties = counties("DC", 1)
+dcblockgroups = block_groups("DC", 1)
+dcpumas = pumas("DC", 1)
+#dcschooldistricts = school_districts("DC", 1)
+dcstates = states("DC", resolution = "500k")
+dczctas = zctas("DC", 1)
+#dcuas <- urban_areas("DC")
+dcwater = area_water("DC",1)
+dclandmarks = landmarks("DC")
+divisions = divisions("DC", resolution = "500k")
+dcmetro_divisions = metro_divisions("DC")
+dcrails = rails("DC")
+dcregions = regions("DC")
+dcstatelegislativedistricts = state_legislative_districts("DC")
+dcvotingdistricts = voting_districts("DC")
+
+## DC Boundary
+dcboundary = counties("DC", cb = TRUE) 
+dcwards = state_legislative_districts("DC", cb = TRUE)
+dcwater = area_water("DC", cb = TRUE)
+dcroads = roads("DC", cb = TRUE)
+
+#chi_joined = geo_join(chi_tracts, values, by = "GEOID")
+
+
+plot(dcboundary)
+
+ggplot()+
+plot(dcwards, col=factor(dcwards$NAMELSAD), add = TRUE, alpha = 0.4)
+plot(dcwater, col='blue', add = TRUE)
+plot(dcroads, add = TRUE)
 
 df = outDF_formatted %>% filter(offense=="SEX ABUSE") 
+dc = get_map(location = 'DC', zoom = 12)
 
 
+ggmap(dc)
+
+dc_basemap <- ggplot() +
+  ggmap(dcroads)
+  geom_sf(data = dcroads, fill = "#d4dddc", color = NA, alpha = 0.2) +
+  geom_sf(data = dc_roads_sf, color = street_yellow, alpha = 0.5) +
+  geom_sf(data = dc_boundary_sf, fill = NA, color = "#909695") +
+  geom_sf(data = dc_water_sf, fill = "#cbdeef", color = "#9bbddd") +
+  map_theme + # the theme I created
+  labs(title = "DC Basemap")
+
+
+plot(dcroads)
+
+ggplot() +
+  geom_sf(data = dc, fill = "#d4dddc", color = NA, alpha = 0.2)
+  
+gg <- ggplot()
+gg <- gg + geom_map(data=combined, map=combined,
+                    aes(x=long, y=lat, map_id=id),
+                    color="black", fill="white", size=0.25)
+gg <- gg + coord_map()
+gg <- gg + theme_map()
+gg
+
+######################################################
+######################################################
+######################################################
+
+zip=readShapeSpatial( "tl_2010_11001_tract10.shp" )
+
+
+
+df = outDF_formatted %>% filter(offense=="SEX ABUSE") 
 
 dc = get_map(location = 'DC', zoom = 12)
 
