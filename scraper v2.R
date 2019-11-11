@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 setwd("/Users/quinnx/Documents/GitHub/crimeR/crimeR")
 library(tidyverse)
 library(lubridate)
@@ -12,6 +11,8 @@ library(sf)
 library(maptools)
 library(rgdal)
 library(tigris)
+library(ggthemes)
+
 
 timeTibble = tibble(timename = c('Last 30 Days',c(2008:2019)),
                     timenum=c(8,32,33,34,35,11,10,9,27,26,38,0,1))
@@ -118,7 +119,18 @@ dcwater = area_water("DC", cb = TRUE)
 dcroads = roads("DC", cb = TRUE)
 
 #chi_joined = geo_join(chi_tracts, values, by = "GEOID")
+roads_simp <- gSimplify(roads, tol=1/200, topologyPreserve=TRUE)
+roads_simp <- SpatialLinesDataFrame(roads_simp, roads@data)
 
+roads_map <- fortify(dcroads) # this takes a bit
+
+gg <- ggplot()
+gg <- gg + geom_map(data=roads_map, map=roads_map,
+                    aes(x=long, y=lat, map_id=id),
+                    color="black", fill="white", size=0.25)
+gg <- gg + coord_map()
+gg <- gg + theme_map()
+gg
 
 plot(dcboundary)
 
