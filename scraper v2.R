@@ -121,21 +121,22 @@ dcroads = primary_secondary_roads("DC")
 roads_map <- fortify(dcroadsraw)
 wards_map <- fortify(dcwards)
 water_map <- fortify(dcwater)
+boundary_map <- fortify(dcboundary)
 
 
 gg <- ggplot()
 gg <- gg + geom_map(data=wards_map, map=wards_map,
-                    aes(x=long, y=lat, map_id=id), colour=wards_map$group, fill='white', inherit.aes = FALSE)
-gg <- gg + geom_map(data=wards_map, map=wards_map,
-                    aes(x=long, y=lat, map_id=id), fill=factor(wards_map$group), alpha=0.3)
+                    aes(x=long, y=lat, map_id=id), color=NA, fill=wards_map$group, size=0.25, alpha=0.3)+
+  scale_color_manual(values = c("0.1"="red","1.1"="orange","2.1"="yellow","3.1"="green","4.1"="blue","5.1"="purple","6.1"="pink","7.1"="grey"))
 gg <- gg + geom_map(data=water_map, map=water_map,
-                    aes(x=long, y=lat, map_id=id),fill="darkblue",color="darkblue") 
+                    aes(x=long, y=lat, map_id=id),fill="darkblue",color=NA) 
 gg <- gg + geom_map(data=roads_map, map=roads_map,
                     aes(x=long, y=lat, map_id=id),
-                    color="black", fill="white", size=0.25) 
+                    color="black", fill=NA, size=0.25) 
 gg <- gg + coord_map()
 gg <- gg + theme_map()
 gg
+ggsave("dc map test v1 20191110.png",width=6,height=6,units="in")
 
 plot(dcboundary)
 
