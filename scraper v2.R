@@ -118,18 +118,18 @@ dcwards = state_legislative_districts("DC", cb = TRUE)
 dcwater = area_water("DC", cb = TRUE)
 dcroadsraw = roads("DC", "District of Columbia")
 dcroads = primary_secondary_roads("DC")
-roads_map <- fortify(dcroads)
+roads_map <- fortify(dcroadsraw)
 wards_map <- fortify(dcwards)
 water_map <- fortify(dcwater)
 
 
 gg <- ggplot()
 gg <- gg + geom_map(data=wards_map, map=wards_map,
-                    aes(x=long, y=lat, map_id=id), fill=wards_map$group, alpha=0.6)
+                    aes(x=long, y=lat, map_id=id), colour=wards_map$group, fill='white', inherit.aes = FALSE)
 gg <- gg + geom_map(data=wards_map, map=wards_map,
-                    aes(x=long, y=lat, map_id=id), color=wards_map$group, fill='white', inherit.aes = FALSE)
+                    aes(x=long, y=lat, map_id=id), fill=factor(wards_map$group), alpha=0.3)
 gg <- gg + geom_map(data=water_map, map=water_map,
-                    aes(x=long, y=lat, map_id=id),fill="blue") 
+                    aes(x=long, y=lat, map_id=id),fill="darkblue") 
 gg <- gg + geom_map(data=roads_map, map=roads_map,
                     aes(x=long, y=lat, map_id=id),
                     color="black", fill="white", size=0.25) 
