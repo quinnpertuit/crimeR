@@ -116,18 +116,23 @@ dcvotingdistricts = voting_districts("DC")
 dcboundary = counties("DC", cb = TRUE) 
 dcwards = state_legislative_districts("DC", cb = TRUE)
 dcwater = area_water("DC", cb = TRUE)
-dcroads = roads("DC", cb = TRUE)
+dcroadsraw = roads("DC", "District of Columbia")
+dcroads = primary_secondary_roads("DC")
+roads_map <- fortify(dcroads)
+wards_map <- fortify(dcwards)
+water_map <- fortify(dcwater)
 
-#chi_joined = geo_join(chi_tracts, values, by = "GEOID")
-roads_simp <- gSimplify(roads, tol=1/200, topologyPreserve=TRUE)
-roads_simp <- SpatialLinesDataFrame(roads_simp, roads@data)
-
-roads_map <- fortify(dcroads) # this takes a bit
 
 gg <- ggplot()
+gg <- gg + geom_map(data=wards_map, map=wards_map,
+                    aes(x=long, y=lat, map_id=id), fill=wards_map$group, alpha=0.6)
+gg <- gg + geom_map(data=wards_map, map=wards_map,
+                    aes(x=long, y=lat, map_id=id), color=wards_map$group, fill='white', inherit.aes = FALSE)
+gg <- gg + geom_map(data=water_map, map=water_map,
+                    aes(x=long, y=lat, map_id=id),fill="blue") 
 gg <- gg + geom_map(data=roads_map, map=roads_map,
                     aes(x=long, y=lat, map_id=id),
-                    color="black", fill="white", size=0.25)
+                    color="black", fill="white", size=0.25) 
 gg <- gg + coord_map()
 gg <- gg + theme_map()
 gg
@@ -142,7 +147,48 @@ plot(dcroads, add = TRUE)
 df = outDF_formatted %>% filter(offense=="SEX ABUSE") 
 dc = get_map(location = 'DC', zoom = 12)
 
+#################
+#https://s3.amazonaws.com/assets.datacamp.com/production/course_6839/slides/chapter4.pdf
 
+options(tigris_class = "sf")
+dc_roads <- roads("DC"
+                  ,
+                  "District of Columbia") %>%
+  filter(RTTYP %in% c("I"
+                      ,
+                      "S"
+                      ,
+                      "U"))
+dc_water <- area_water("DC"
+                       ,
+                       "District of Columbia")
+dc_boundary <- counties("DC"
+                        , cb = TRUE)
+
+plot(dc_water$geometry, col = "lightblue")
+
+ggplot() +
+  geom_sf(data = dc_boundary, color = NA, fill = "white") +
+  geom_sf(data = dc_dots, aes(color = group, fill = group), size = 0.1) +
+  geom_sf(data = dc_water, color = "lightblue"
+          , fill = "lightblue") +
+  geom_sf(data = dc_roads, color = "grey") +
+  coord_sf(crs = 26918, datum = NA) +
+  scale_color_brewer(palette = "Set1"
+                     , guide = FALSE) +
+  scale_fill_brewer(palette = "Set1") +
+  labs(title = "The racial geography of Washington, DC"
+       ,
+       subtitle = "2010 decennial U.S. Census"
+       ,
+       fill = ""
+       ,
+       caption = "1 dot = approximately 100 people.\nData acquired with
+the R tidycensus and tigris packages.")
+
+
+
+################
 ggmap(dc)
 
 dc_basemap <- ggplot() +
@@ -221,8 +267,7 @@ dc_basemap <- ggplot() +
   geom_sf(data = dc_roads_sf, color = street_yellow, alpha = 0.5) +
   geom_sf(data = dc_boundary_sf, fill = NA, color = "#909695") +
   geom_sf(data = dc_water_sf, fill = "#cbdeef", color = "#9bbddd") +
-  map_theme + # the theme I created
-=======
+  map_theme 
 setwd("C:/Users/e321843/Documents/GitHub/crimeR")
 library(tidyverse)
 library(lubridate)
@@ -444,5 +489,16 @@ dc_basemap <- ggplot() +
   geom_sf(data = dc_boundary_sf, fill = NA, color = "#909695") +
   geom_sf(data = dc_water_sf, fill = "#cbdeef", color = "#9bbddd") +
   map_theme + 
->>>>>>> 7e85616d78c418b73c1e244c60a2d60e385a4960
   labs(title = "DC Basemap")
+  
+  
+  
+  
+  library("ggspatial")
+  ggplot(data = world) +
+    geom_sf() +
+    annotation_scale(location = "bl", width_hint = 0.5) +
+    annotation_north_arrow(location = "bl", which_north = "true", 
+                           pad_x = unit(0.75, "in"), pad_y = unit(0.5, "in"),
+                           style = north_arrow_fancy_orienteering) +
+    coord_sf(xlim = c(-102.15, -74.12), ylim = c(7.65, 33.97))
