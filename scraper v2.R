@@ -129,7 +129,7 @@ gg <- gg + geom_map(data=wards_map, map=wards_map,
 gg <- gg + geom_map(data=wards_map, map=wards_map,
                     aes(x=long, y=lat, map_id=id), fill=factor(wards_map$group), alpha=0.3)
 gg <- gg + geom_map(data=water_map, map=water_map,
-                    aes(x=long, y=lat, map_id=id),fill="darkblue") 
+                    aes(x=long, y=lat, map_id=id),fill="darkblue",color="darkblue") 
 gg <- gg + geom_map(data=roads_map, map=roads_map,
                     aes(x=long, y=lat, map_id=id),
                     color="black", fill="white", size=0.25) 
