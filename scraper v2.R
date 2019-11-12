@@ -82,7 +82,6 @@ outDF_formatted = rbind(
   read.csv('file2.csv',stringsAsFactors = F)
 )
 
-crimes = outDF_formatted %>% filter(offense=='HOMICIDE')
 
 sts <- c("DC", "MD", "VA") 
 combined <- rbind_tigris(
@@ -140,24 +139,10 @@ gg
 ggsave("dc map test v1 20191110.png",width=6,height=6,units="in")
 
 ###
-mapdata = bind_rows(wards_map %>% mutate(m='wards'), water_map %>% mutate(m='water'), roads_map %>% mutate(m='roads'))
+mapdata = bind_rows(wards_map %>% mutate(m='wards'), water_map %>% mutate(m='water'), roads_map %>% mutate(m='roads')) 
+crimes = outDF_formatted %>% filter(offense=='HOMICIDE') %>% 
+  mutate(year = ifelse(year=='Last 30 Days','2019',year))
 
-ggmap(mapdata, base_layer = gg) +
-  geom_point(data = crimes,
-             mapping = aes(x = longitude, y = latitude),
-             color="red", size=0.2)+ +
-  facet_wrap(~year, ncol = 3)
-
-
-ggplot() +
-  geom_path(data=st_map, aes(long, lat, group=group), size=0.25) + # basemap
-  geom_point(data=points_df, aes(lng, lat, color=level)) +         # add our points layer
-  coord_map("polyconic") +                                         # for funsies
-  facet_wrap(~level) +                                             # NEVER use a fully qualified column unless you know what you're doing
-  labs(x=NULL, y=NULL) +
-  theme_ipsum(grid="") +
-  theme(axis.text=element_blank()) +
-  theme(legend.position="none")
 
 ggplot() + 
 geom_map(data=mapdata %>% filter(m=='wards'), map=mapdata %>% filter(m=='wards'),
@@ -169,7 +154,8 @@ geom_map(data=mapdata %>% filter(m=='roads'), map=mapdata %>% filter(m=='roads')
                     color="black", fill=NA, size=0.25) +
   geom_point(data = crimes,
              mapping = aes(x = longitude, y = latitude),
-             color="red", size=0.2)+ coord_map()+ facet_wrap(~year)
+             color="red", size=0.1)+ coord_map()+ theme_map() + facet_wrap(~year, ncol=4) +
+  theme(legend.position="none") 
 
 
 #
