@@ -82,6 +82,7 @@ outDF_formatted = rbind(
   read.csv('file2.csv',stringsAsFactors = F)
 )
 
+crimes = outDF_formatted %>% filter(offense=='HOMICIDE')
 
 sts <- c("DC", "MD", "VA") 
 combined <- rbind_tigris(
@@ -137,6 +138,61 @@ gg <- gg + coord_map()
 gg <- gg + theme_map()
 gg
 ggsave("dc map test v1 20191110.png",width=6,height=6,units="in")
+
+###
+mapdata = bind_rows(wards_map %>% mutate(m='wards'), water_map %>% mutate(m='water'), roads_map %>% mutate(m='roads'))
+
+ggmap(mapdata, base_layer = gg) +
+  geom_point(data = crimes,
+             mapping = aes(x = longitude, y = latitude),
+             color="red", size=0.2)+ +
+  facet_wrap(~year, ncol = 3)
+
+
+ggplot() +
+  geom_path(data=st_map, aes(long, lat, group=group), size=0.25) + # basemap
+  geom_point(data=points_df, aes(lng, lat, color=level)) +         # add our points layer
+  coord_map("polyconic") +                                         # for funsies
+  facet_wrap(~level) +                                             # NEVER use a fully qualified column unless you know what you're doing
+  labs(x=NULL, y=NULL) +
+  theme_ipsum(grid="") +
+  theme(axis.text=element_blank()) +
+  theme(legend.position="none")
+
+ggplot() + 
+geom_map(data=mapdata %>% filter(m=='wards'), map=mapdata %>% filter(m=='wards'),
+                    aes(x=long, y=lat, map_id=id, fill= group), color=NA, size=0.25, alpha=0.3)+
+geom_map(data=mapdata %>% filter(m=='water'), map=mapdata %>% filter(m=='water'),
+                    aes(x=long, y=lat, map_id=id),fill="darkblue",color=NA)+
+geom_map(data=mapdata %>% filter(m=='roads'), map=mapdata %>% filter(m=='roads'),
+                    aes(x=long, y=lat, map_id=id),
+                    color="black", fill=NA, size=0.25) +
+  geom_point(data = crimes,
+             mapping = aes(x = longitude, y = latitude),
+             color="red", size=0.2)+ coord_map()+ facet_wrap(~year)
+
+
+#
+st_map <- mapdata
+
+set.seed(2017-12-19)
+data_frame(
+  lat = sample(st_map$lat, 30),
+  lng = sample(st_map$long, 30),
+  level = rep(c("A", "B", "C"), 10)
+) -> points_df
+
+ggplot() +
+  geom_path(data=st_map, aes(long, lat, group=group), size=0.25) + gg + # basemap
+  geom_point(data=crimes, aes(longitude, latitude, color="red")) +         # add our points layer
+  coord_map("polyconic") +                                         # for funsies
+  facet_wrap(~year) +                                             # NEVER use a fully qualified column unless you know what you're doing
+  labs(x=NULL, y=NULL) +
+  theme(axis.text=element_blank()) +
+  theme(legend.position="none")
+###
+
+
 
 plot(dcboundary)
 
