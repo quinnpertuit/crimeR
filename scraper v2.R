@@ -149,9 +149,9 @@ geom_map(data=mapdata %>% filter(m=='wards'), map=mapdata %>% filter(m=='wards')
                     aes(x=long, y=lat, map_id=id, fill= group), color=NA, size=0.25, alpha=0.3)+
 geom_map(data=mapdata %>% filter(m=='water'), map=mapdata %>% filter(m=='water'),
                     aes(x=long, y=lat, map_id=id),fill="darkblue",color=NA)+
-geom_map(data=mapdata %>% filter(m=='roads'), map=mapdata %>% filter(m=='roads'),
-                    aes(x=long, y=lat, map_id=id),
-                    color="black", fill=NA, size=0.25) +
+# geom_map(data=mapdata %>% filter(m=='roads'), map=mapdata %>% filter(m=='roads'),
+#                     aes(x=long, y=lat, map_id=id),
+#                     color="black", fill=NA, size=0.25) +
   geom_point(data = crimes,
              mapping = aes(x = longitude, y = latitude),
              color="red", size=0.1)+ coord_map()+ theme_map() + facet_wrap(~year, ncol=4) +
