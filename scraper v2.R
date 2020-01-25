@@ -1,4 +1,4 @@
-setwd("/Users/quinnx/Documents/GitHub/crimeR/crimeR")
+setwd("/Users/quinnx/Documents/GitHub/crimeR")
 library(tidyverse)
 library(lubridate)
 library(jsonlite)
@@ -14,8 +14,8 @@ library(tigris)
 library(ggthemes)
 
 
-timeTibble = tibble(timename = c('Last 30 Days',c(2008:2019)),
-                    timenum=c(8,32,33,34,35,11,10,9,27,26,38,0,1))
+timeTibble = tibble(timename = c('Last 30 Days',c(2008:2020)),
+                    timenum=c(8,32,33,34,35,11,10,9,27,26,38,0,1,2))
 
 getCrimes = function(url){
   json = fromJSON(url, flatten = TRUE)
@@ -23,20 +23,9 @@ getCrimes = function(url){
   return(restemp)
 }
 
-getCrimes_Fail = tibble(attributes.CCN = NA_character_, attributes.REPORT_DAT = 0, 
-                        attributes.SHIFT = "NONE", attributes.METHOD = "NONE", 
-                        attributes.OFFENSE = "NONE", attributes.BLOCK = "NONE", 
-                        attributes.XBLOCK = 397228, attributes.YBLOCK = 137253, attributes.WARD = "2", 
-                        attributes.ANC = "2F", attributes.DISTRICT = "2", attributes.PSA = "207", 
-                        attributes.NEIGHBORHOOD_CLUSTER = "Cluster 8", attributes.BLOCK_GROUP = "010100 1", 
-                        attributes.CENSUS_TRACT = "010100", attributes.VOTING_PRECINCT = "Precinct 129", 
-                        attributes.LATITUDE = 38.9031278211765, attributes.LONGITUDE = -77.0319575524472, 
-                        attributes.BID = "DOWNTOWN", attributes.START_DATE = 1571457004000, 
-                        attributes.END_DATE = 1571460376000, attributes.OBJECTID = 360548027L, 
-                        attributes.OCTO_RECORD_ID = "19186942-01", geometry.x = -77.0319598461276, 
-                        geometry.y = 38.9031356087505)
+getCrimes_Fail = tibble(status='failed')
 
-outDF = tibble()
+outList = list()
 for (i in 1:nrow(timeTibble)){
   ids = fromJSON(paste0("http://maps2.dcgis.dc.gov/dcgis/rest/services/FEEDS/MPD/MapServer/",timeTibble$timenum[i],"/query?where=1%3D1&outFields=*&outSR=4326&f=json&returnIdsOnly=TRUE")) %>% .$objectIds %>% as.character()
   
@@ -63,8 +52,10 @@ for (i in 1:nrow(timeTibble)){
   }
   
   resout = res %>% mutate(YEAR = timeTibble$timename[i])
-  outDF = rbind(outDF,resout)
+  outList = outList(resout)
 }
+
+outDF = outList %>% bind_rows()
 
 outDF_formatted = outDF %>%
   `colnames<-`(gsub("geometry.","geo_",(gsub("attributes.","",(tolower(colnames(.))))))) %>%
