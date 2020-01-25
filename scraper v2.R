@@ -23,36 +23,29 @@ getCrimes = function(url){
   return(restemp)
 }
 
-getCrimes_Fail = tibble(status='failed')
-
 outList = list()
 for (i in 1:nrow(timeTibble)){
+  print(i)
   ids = fromJSON(paste0("http://maps2.dcgis.dc.gov/dcgis/rest/services/FEEDS/MPD/MapServer/",timeTibble$timenum[i],"/query?where=1%3D1&outFields=*&outSR=4326&f=json&returnIdsOnly=TRUE")) %>% .$objectIds %>% as.character()
   
   id_seq = tibble(
     start=seq(from=1,to=ceiling(length(ids)/100)*100,by=100),
     end=c(seq(from=100,to=length(ids),by=100),length(ids)))
   
-  res = tibble()
+  resList = list()
   for (seq_i in 1:nrow(id_seq)){
   
     print(paste("Scraping:",timeTibble$timename[i],"- at",seq_i,"of",nrow(id_seq)))
     ids_string = str_c(ids[id_seq$start[seq_i]:id_seq$end[seq_i]], collapse = ",")
-    #Sys.sleep(3)
+    Sys.sleep(3)
     url = paste0("http://maps2.dcgis.dc.gov/dcgis/rest/services/FEEDS/MPD/MapServer/",timeTibble$timenum[i],"/query?where=1%3D1&objectIds=",ids_string,"&outFields=*&outSR=4326&f=json")
     
-    restemp = tryCatch(getCrimes(url),
-                       error=function(err){
-                         print(paste0("Failed at: ",timeTibble$timename[i],"on: ",seq_i)) 
-                         return(getCrimes_Fail %>% mutate(attributes.CCN = url))
-                         }
-                       )
+    restemp = tryCatch(getCrimes(url) %>% mutate(timename=timeTibble$timename[i],timenum=timeTibble$timenum[i],seq_i=seq_i),error=function(err){tibble(timename=timeTibble$timename[i],timenum=timeTibble$timenum[i],seq_i=seq_i)})
 
-    res = rbind(res,restemp)
+    resList[seq_i]=restemp
   }
   
-  resout = res %>% mutate(YEAR = timeTibble$timename[i])
-  outList = outList(resout)
+  outList[i] = resList
 }
 
 outDF = outList %>% bind_rows()
