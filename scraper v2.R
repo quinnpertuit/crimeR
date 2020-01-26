@@ -55,8 +55,14 @@ outCrimeDF =  bind_rows(outList) %>%
 
 write_csv(outCrimeDF,paste(format(Sys.time(),'%Y-%m-%d %H:%M:%S'),'outCrimeDF.csv'))
 
+write_csv(outCrimeDF %>% mutate(rpt_year = year(rpt_date)) %>% filter(rpt_year %in% c(2008:2012)),paste(format(Sys.time(),'%Y-%m-%d %H:%M:%S'),'outCrimeDF 2008-2012.csv'))
+write_csv(outCrimeDF %>% mutate(rpt_year = year(rpt_date)) %>% filter(rpt_year %in% c(2013:2017)),paste(format(Sys.time(),'%Y-%m-%d %H:%M:%S'),'outCrimeDF 2013-2017.csv'))
+write_csv(outCrimeDF %>% mutate(rpt_year = year(rpt_date)) %>% filter(rpt_year %in% c(2018:2020)),paste(format(Sys.time(),'%Y-%m-%d %H:%M:%S'),'outCrimeDF 2018-2020.csv'))
+write_csv(outCrimeDF %>% mutate(rpt_year = year(rpt_date)) %>% filter(is.na(rpt_year)),paste(format(Sys.time(),'%Y-%m-%d %H:%M:%S'),'outCrimeDF Year NA.csv'))
 
 outDF =  lapply(outList %>% `names<-`(c('Last 30 Days',c(2008:2020))),bind_rows)
+
+out201
 
 outDF_formatted = outDF
 
