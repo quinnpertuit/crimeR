@@ -48,13 +48,17 @@ for (i in 1:nrow(timeTibble)){
   outList[[i]] = resList %>% bind_rows() 
 }
 saveRDS(outList,paste0(format(Sys.time(),'%Y%m%d %H%M%S'),'crimes_outList_20200124.RData'))
-
-outDF =  lapply(outList %>% `names<-`(c('Last 30 Days',c(2008:2020))),bind_rows)
-
-outDF_formatted = outDF %>%
+outCrimeDF =  bind_rows(outList) %>%
   `colnames<-`(gsub("geometry.","geo_",(gsub("attributes.","",(tolower(colnames(.))))))) %>%
   rename(rpt_date = report_dat,neighborhood = neighborhood_cluster) %>% 
   mutate_at(vars(rpt_date,start_date,end_date),~as.Date(as.POSIXct(./1000, origin="1970-01-01")))
+
+write_csv(outCrimeDF,paste(format(Sys.time(),'%Y-%m-%d %H:%M:%S'),'outCrimeDF.csv'))
+
+
+outDF =  lapply(outList %>% `names<-`(c('Last 30 Days',c(2008:2020))),bind_rows)
+
+outDF_formatted = outDF
 
 file1 = outDF_formatted[1:206406,]
 file2 = outDF_formatted[206407:nrow(outDF_formatted),]
