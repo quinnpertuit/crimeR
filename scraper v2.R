@@ -42,13 +42,14 @@ for (i in 1:nrow(timeTibble)){
     
     restemp = tryCatch(getCrimes(url) %>% mutate(timename=timeTibble$timename[i],timenum=timeTibble$timenum[i],seq_i=seq_i),error=function(err){tibble(timename=timeTibble$timename[i],timenum=timeTibble$timenum[i],seq_i=seq_i)})
 
-    resList[seq_i]=restemp
+    resList[[seq_i]]=restemp
   }
   
-  outList[i] = resList
+  outList[[i]] = resList %>% bind_rows() 
 }
+saveRDS(outList,paste0(format(Sys.time(),'%Y%m%d %H%M%S'),'crimes_outList_20200124.RData'))
 
-outDF = outList %>% bind_rows()
+outDF =  lapply(outList %>% `names<-`(c('Last 30 Days',c(2008:2020))),bind_rows)
 
 outDF_formatted = outDF %>%
   `colnames<-`(gsub("geometry.","geo_",(gsub("attributes.","",(tolower(colnames(.))))))) %>%
