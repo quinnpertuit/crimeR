@@ -48,10 +48,25 @@ for (i in 1:nrow(timeTibble)){
   outList[[i]] = resList %>% bind_rows() 
 }
 saveRDS(outList,paste0(format(Sys.time(),'%Y%m%d %H%M%S'),'crimes_outList_20200124.RData'))
+outList = readRDS('20200126 092841crimes_outList_20200124.RData')
+
 outCrimeDF =  bind_rows(outList) %>%
   `colnames<-`(gsub("geometry.","geo_",(gsub("attributes.","",(tolower(colnames(.))))))) %>%
   rename(rpt_date = report_dat,neighborhood = neighborhood_cluster) %>% 
   mutate_at(vars(rpt_date,start_date,end_date),~as.Date(as.POSIXct(./1000, origin="1970-01-01")))
+
+
+plot1 = outCrimeDF %>%
+  filter(offense=="MOTOR VEHICLE THEFT") %>% 
+  group_by(rpt_date) %>% 
+  summarise(n=n())
+
+ggplot(plot1) +
+  geom_line(aes(x=rpt_date, y=n)) +
+  theme(axis.text=element_blank()) +
+  theme(legend.position="none")
+
+
 
 write_csv(outCrimeDF,paste(format(Sys.time(),'%Y-%m-%d %H:%M:%S'),'outCrimeDF.csv'))
 
