@@ -17,6 +17,7 @@ library(ggthemes)
 timeTibble = tibble(timename = c('Last 30 Days',c(2008:2020)),
                     timenum=c(8,32,33,34,35,11,10,9,27,26,38,0,1,2))
 
+timeTibble = timeTibble %>% filter(timename %in% c('Last 30 Days',2020))
 getCrimes = function(url){
   json = fromJSON(url, flatten = TRUE)
   restemp = json$features %>% as_tibble()
@@ -47,8 +48,10 @@ for (i in 1:nrow(timeTibble)){
   
   outList[[i]] = resList %>% bind_rows() 
 }
-saveRDS(outList,paste0(format(Sys.time(),'%Y%m%d %H%M%S'),'crimes_outList_20200124.RData'))
-outList = readRDS('20200126 092841crimes_outList_20200124.RData')
+saveRDS(outList,paste0(format(Sys.time(),'%Y%m%d %H%M%S'),'crimes_outList_2020and30days_20200224.RData'))
+outList1 = readRDS('20200126 092841crimes_outList_20200124.RData')
+outList2 = readRDS('20200225 203945crimes_outList_2020and30days_20200224.RData')
+
 
 outCrimeDF =  bind_rows(outList) %>%
   `colnames<-`(gsub("geometry.","geo_",(gsub("attributes.","",(tolower(colnames(.))))))) %>%
@@ -58,13 +61,15 @@ outCrimeDF =  bind_rows(outList) %>%
 
 plot1 = outCrimeDF %>%
   filter(offense=="MOTOR VEHICLE THEFT") %>% 
+  mutate(rpt_month = )
   group_by(rpt_date) %>% 
+    as.month
   summarise(n=n())
 
 ggplot(plot1) +
   geom_line(aes(x=rpt_date, y=n)) +
-  theme(axis.text=element_blank()) +
-  theme(legend.position="none")
+  theme(axis.title=element_blank()) +
+  scale_x_date(date_breaks = "1 month", date_labels = "%W")
 
 
 
